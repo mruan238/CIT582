@@ -4,7 +4,7 @@ import json
 def pin_to_ipfs(data):
 	assert isinstance(data,dict), f"Error pin_to_ipfs expects a dictionary"
 	#YOUR CODE HERE
-	json_mylist = json.dumps(data, separators=(',', ':'))
+	json_mylist = {'file': json.dumps(data)}
 	response = requests.post('https://ipfs.infura.io:5001/api/v0/add', files = json_mylist, auth =  ('2AU3yrWCRD4foAWoUgyiqNdE1Py', 'ec0690bab3672f0d95a012b046312d7b'))
 	cid = response.json()
 	return cid
