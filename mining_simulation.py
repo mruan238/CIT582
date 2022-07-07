@@ -18,7 +18,6 @@ def Simulate(alpha,gamma,N, seed):
     #A round begin when the state=0
     for i in range(N):
         r=random.random()
-        hb = 0
         if state==0:
             #The selfish pool has 0 hidden block.
             if r<=alpha:
@@ -38,7 +37,7 @@ def Simulate(alpha,gamma,N, seed):
                 #The selfish miners found a new block.
                 #Write a piece of code to change the required variables.
                 state = 2
-                n =2
+                n = 2 
                 #You might need to define new variable to keep track of the number of hidden blocks.
             else:
                 #Write a piece of code to change the required variables.
@@ -79,7 +78,7 @@ def Simulate(alpha,gamma,N, seed):
                 state+=1
             else:
                 #The honest miners found a block
-                state = -1
+                state -=1
     return float(SelfishRevenue)/ChainLength
 
 
