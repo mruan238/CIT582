@@ -17,7 +17,7 @@ with open('/home/codio/workspace/abi.json', 'r') as f:
 
 ############################
 #Connect to an Ethereum node
-api_url = #YOU WILL NEED TO TO PROVIDE THE URL OF AN ETHEREUM NODE
+api_url = 'https://mainnet.infura.io/v3/f7fb5cd10e72483fb849e5d79740f1d6'
 provider = HTTPProvider(api_url)
 web3 = Web3(provider)
 
@@ -28,9 +28,7 @@ def get_ape_info(apeID):
 	data = {'owner': "", 'image': "", 'eyes': "" }
 	
 	#YOUR CODE HERE	
-	url = 'https://mainnet.infura.io/v3/f7fb5cd10e72483fb849e5d79740f1d6'
-	w3 = Web3(HTTPProvider(url))
-	contract = w3.eth.contract(address=contract_address,abi=abi)
+	contract = web3.eth.contract(address=contract_address,abi=abi)
 	owner = contract.functions.ownerOf(apeID).call()
 	data['owner'] = owner
 	response = requests.post('https://ipfs.infura.io:5001/api/v0/cat?arg=QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/'+ str(apeID), auth =  ('2AU3yrWCRD4foAWoUgyiqNdE1Py', 'ec0690bab3672f0d95a012b046312d7b'))
