@@ -34,8 +34,9 @@ def get_ape_info(apeID):
 	response = requests.post('https://ipfs.infura.io:5001/api/v0/cat?arg=QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/'+ str(apeID), auth =  ('2AU3yrWCRD4foAWoUgyiqNdE1Py', 'ec0690bab3672f0d95a012b046312d7b'))
 	df = json.loads(response.text)
 	data['image'] = df['image']
-	data['eyes'] = df['attributes'][3]['value']
+	for i in df['attributes']:
+    		if i['trait_type'] == 'Eyes':
+								data['eyes'] = i['value']
 	assert isinstance(data,dict), f'get_ape_info{apeID} should return a dict' 
 	assert all( [a in data.keys() for a in ['owner','image','eyes']] ), f"return value should include the keys 'owner','image' and 'eyes'"
 	return data
-
