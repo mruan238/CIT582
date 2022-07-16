@@ -11,23 +11,41 @@ app.url_map.strict_slashes = False
 @app.route('/verify', methods=['GET','POST'])
 def verify():
     content = request.get_json(silent=True)
-    platform = content['payload']['platform'] 
-    message = content['payload']['message'] 
-    pk = content['payload']['pk'] 
-    sig = content['sig']
-    payload = json.dumps(content['payload'])
-    response = False
-    
-    if platform=='Ethereum':
+    print("Working ETH",content)
+    #Verify Etherium Signature
+    result = False #Should only be true if signature validates
+    if content.payload.platform=="Ethereum":
+      
+        eth_account.Account.enable_unaudited_hdwallet_features()
+        acct, mnemonic = eth_account.Account.create_with_mnemonic()
+
+        eth_pk = acct.address
+        eth_sk = acct.key
+
+        payload = content.payload
+
         eth_encoded_msg = eth_account.messages.encode_defunct(text=payload)
-        if eth_account.Account.recover_message(eth_encoded_msg,signature=sig) == pk:
-            response = True
+        eth_sig_obj = eth_account.Account.sign_message(eth_encoded_msg,eth_sk)
+        
+        # print( eth_sig_obj.messageHash )  
+        if eth_account.Account.recover_message(eth_encoded_msg,signature=eth_sig_obj.signature.hex()) == eth_pk:
+            result=True
+        
+    #Verify Algorand Signature
+    elif content.payload.platform=="Algorand":
+        payload = content.payload
 
-    if platform=='Algorand':
-        if algosdk.util.verify_bytes(payload.encode('utf-8'),sig,pk):
-            response = True
+        algo_sk, algo_pk = algosdk.account.generate_account()
+        algo_sig_str = algosdk.util.sign_bytes(payload.encode('utf-8'),algo_sk)
 
-    return jsonify(response)
+        if algosdk.util.verify_bytes(payload.encode('utf-8'),algo_sig_str,algo_pk):
+            print( "Algo sig verifies!" )
+            result=True
+        
+    else:
+        result = False
+    
+    return jsonify(result)
 
 if __name__ == '__main__':
     app.run(port='5002')
