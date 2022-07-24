@@ -12,10 +12,13 @@ from datetime import datetime
 import math
 import sys
 import traceback
-import time
 from web3 import Web3
+import time
+
 from algosdk import mnemonic
 from algosdk.v2client import indexer
+
+
 
 # TODO: make sure you implement connect_to_algo, send_tokens_algo, and send_tokens_eth
 from send_tokens import connect_to_algo, connect_to_eth, send_tokens_algo, send_tokens_eth
@@ -87,7 +90,7 @@ def connect_to_blockchains():
         g.w3 = connect_to_eth()
         
 """ End of pre-defined methods """
-        
+
 """ Helper Methods (skeleton code for you to implement) """
 def check_sig(payload,sig):
     #1. Verifying an endpoint for verifying signatures for ethereum
@@ -114,6 +117,7 @@ def check_sig(payload,sig):
         #3. Check for invalid input
     else:
         print("invalid input")
+    #print(" this is jsonify(result_check_sig) = ",jsonify(result_check_sig))
     return jsonify(result_check_sig)
 
 
@@ -123,13 +127,16 @@ def log_message(message_dict):
     # TODO: Add message to the Log table
     g.session.add(log(message = msg))
     g.session.commit()
+    
     return
 
 def get_algo_keys():
     
     # TODO: Generate or read (using the mnemonic secret) 
     # the algorand public/private keys
-    mnemonic_secret = 'ship floor pattern' 
+    # mnemonic_secret = "YOUR MNEMONIC HERE"
+    #sk, address = account.generate_account()
+    mnemonic_secret = 'ship floor pattern transfer fiscal diamond maid raise never debate lemon brown siren upset gun sibling lend write cloth success glove shrug cattle ability ivory' 
     algo_sk = mnemonic.to_private_key(mnemonic_secret)
     algo_pk = mnemonic.to_public_key(mnemonic_secret)    
     return algo_sk, algo_pk
@@ -138,20 +145,20 @@ def get_algo_keys():
 def get_eth_keys(filename = "eth_mnemonic.txt"):
     w3 = Web3()
     w3.eth.account.enable_unaudited_hdwallet_features()
+
+    # TODO: Generate or read (using the mnemonic secret) 
+    # the ethereum public/private keys
     mnemonic_secret = "beauty diagram educate skirt unfold sing chaos depend acoustic science engage rib"
+    #acct,mnemonic_secret = w3.eth.account.create_with_mnemonic()
     acct = w3.eth.account.from_mnemonic(mnemonic_secret)
     eth_pk = acct._address
     eth_sk = acct._private_key.hex()
-    # TODO: Generate or read (using the mnemonic secret) 
-    # the ethereum public/private keys
-
     return eth_sk, eth_pk
   
 def fill_order(order, txes=[]):
     # TODO: 
     # Match orders (same as Exchange Server II)
-    # Validate the order has a payment to back it (make sure the counterparty also made a payment)
-    # Make sure that you end up executing all resulting transactions!
+    #1.Insert the order
     order_obj = Order(receiver_pk=order['receiver_pk'],\
                       buy_currency=order['buy_currency'],\
                       sell_currency=order['sell_currency'],\
@@ -160,10 +167,13 @@ def fill_order(order, txes=[]):
     g.session.add(order_obj)
     g.session.commit()
 
+    #2.Check if there are any existing orders that match
     matched_order = g.session.query(Order).filter(Order.filled==None,\
                                                   Order.buy_currency == order_obj.sell_currency,\
                                                   Order.sell_currency == order_obj.buy_currency,\
                                                   Order.sell_amount/Order.buy_amount >= order_obj.buy_amount/order_obj.sell_amount).first()
+    
+    #3. if a match is found
     if matched_order != None:
         matched_order.filled = datetime.now()
         order_obj.filled = matched_order.filled
@@ -177,6 +187,8 @@ def fill_order(order, txes=[]):
                                   buy_amount = order_obj.buy_amount - matched_order.sell_amount,\
                                   sell_amount = (order_obj.buy_amount - matched_order.sell_amount)* order_obj.sell_amount / order_obj.buy_amount,\
                                   creator_id = order_obj.id)
+                #print("partially filled, new_order.buy_amount > matched_order.sell amount, creator_id =", new_order.creator_id)
+                #txes.append(order_obj.id)
                 tx_obj = TX( platform = order_obj.sell_currency, receiver_pk = order_obj.receiver_pk, order_id = order_obj.id, tx_id = order_obj.tx_id)
                 txes.append(tx_obj)
                 g.session.add(tx_obj)
@@ -184,7 +196,9 @@ def fill_order(order, txes=[]):
                 g.session.commit()
                   
         if matched_order.buy_amount > order_obj.sell_amount:
-                new_order = Order(receiver_pk = matched_order.receiver_pk,buy_currency =matched_order.buy_currency, sell_currency = matched_order.sell_currency,buy_amount = matched_order.buy_amount - order_obj.sell_amount,                                   sell_amount= (matched_order.buy_amount - order_obj.sell_amount) * matched_order.sell_amount / matched_order.buy_amount,creator_id = matched_order.id)
+                new_order = Order(receiver_pk = matched_order.receiver_pk,                                   buy_currency =matched_order.buy_currency, sell_currency = matched_order.sell_currency,                                   buy_amount = matched_order.buy_amount - order_obj.sell_amount,                                   sell_amount= (matched_order.buy_amount - order_obj.sell_amount) * matched_order.sell_amount / matched_order.buy_amount,                                  creator_id = matched_order.id)
+                #print("partially filled, matched_order.buy_amount>new_order.sell_amount, creator_id =", new_order.creator_id)
+                #txes.append(order_obj.id)
                 tx_obj = TX( platform = order_obj.sell_currency, receiver_pk = order_obj.receiver_pk, order_id = order_obj.id, tx_id = order_obj.tx_id)
                 txes.append(tx_obj)
                 g.session.add(tx_obj)
@@ -224,6 +238,7 @@ def execute_txes(txes):
         return True
     print( f"Trying to execute {len(txes)} transactions" )
     print( f"IDs = {[tx['order_id'] for tx in txes]}" )
+
     eth_sk, eth_pk = get_eth_keys()
     algo_sk, algo_pk = get_algo_keys()
     
@@ -238,6 +253,8 @@ def execute_txes(txes):
     #       1. Send tokens on the Algorand and eth testnets, appropriately
     #          We've provided the send_tokens_algo and send_tokens_eth skeleton methods in send_tokens.py
     #       2. Add all transactions to the TX table
+
+ 
     for algo_tx in algo_txes:
         order_dict = {}
         order_dict['buy_currency'] = "Ethereum"
@@ -250,7 +267,7 @@ def execute_txes(txes):
         order_dict['tx_id'] = send_tokens_algo(acl, algo_pk , algo_tx)
         txes.append(order_dict)
           
-        g.session.add(algo_tx)
+        g.session.add(algo_tx_id)
         g.session.commit()
         
     for eth_tx in eth_txes:
@@ -267,10 +284,11 @@ def execute_txes(txes):
   
         g.session.add(eth_tx)
         g.session.commit()
+    
     pass
 
 """ End of Helper methods"""
-  
+
 @app.route('/address', methods=['POST'])
 def address():
     if request.method == "POST":
@@ -284,19 +302,22 @@ def address():
         
         if content['platform'] == "Ethereum":
             #Your code here
-            return jsonify(eth_pk)
+            #eth_sk,eth_pk = get_eth_keys(filename = "eth_mnemonic.txt")
+            eth_sk,eth_pk = get_eth_keys()
+            return jsonify( eth_pk )
         if content['platform'] == "Algorand":
             #Your code here
-            return jsonify(algo_pk)
+            algo_sk,algo_pk = get_algo_keys()
+            return jsonify( algo_pk )
 
 @app.route('/trade', methods=['POST'])
 def trade():
     print( "In trade", file=sys.stderr )
     connect_to_blockchains()
-    get_keys()
+    #get_keys()
     if request.method == "POST":
         content = request.get_json(silent=True)
-        columns = [ "buy_currency", "sell_currency", "buy_amount", "sell_amount", "platform", "tx_id", "receiver_pk"]
+        columns = [ "buy_currency", "sell_currency", "buy_amount", "sell_amount", "platform", "tx_id", "receiver_pk","sender_pk"]
         fields = [ "sig", "payload" ]
         error = False
         for field in fields:
@@ -305,6 +326,7 @@ def trade():
                 error = True
         if error:
             print( json.dumps(content) )
+            log_message(content)
             return jsonify( False )
         
         error = False
@@ -314,6 +336,7 @@ def trade():
                 error = True
         if error:
             print( json.dumps(content) )
+            log_message(content)
             return jsonify( False )
         
         # Your code here
@@ -323,6 +346,7 @@ def trade():
         payload = content['payload']
         sig = content['sig']
         result_check = check_sig(payload,sig)
+        
         # 2. Add the order to the table
         if(result_check):
             order = {}
@@ -334,16 +358,20 @@ def trade():
             order['sell_amount'] = payload['sell_amount']
             order['signature'] = sig
             order['tx_id'] = payload['tx_id']
+        
         # 3a. Check if the order is backed by a transaction equal to the sell_amount (this is new)
+
 
         # 3b. Fill the order (as in Exchange Server II) if the order is valid
             txes = fill_order(order,txes=[])
+        
         # 4. Execute the transactions
             execute_txes(txes)
         # If all goes well, return jsonify(True). else return jsonify(False)
             return jsonify(True)
         else:
             log_message(content)
+        
         if(result_check):
             return jsonify(True)
         else:
@@ -352,7 +380,9 @@ def trade():
 
 @app.route('/order_book')
 def order_book():
-    fields = [ "buy_currency", "sell_currency", "buy_amount", "sell_amount", "signature", "tx_id", "receiver_pk", "sender_pk" ]
+    fields = [ "buy_currency", "sell_currency", "buy_amount", "sell_amount", "signature", "tx_id", "receiver_pk","sender_pk"]
+        
+    # Same as before
     temp = g.session.query(Order)
     mydict = []
     for myquery in temp.all():
@@ -367,9 +397,10 @@ def order_book():
         myorder['tx_id'] =  getattr(myquery,'tx_id')
         mydict.append(myorder)
     result_order_book = { 'data': mydict } 
+    #print(result_order_book) 
+    #print(" this is jsonify(result_order_book) = ",jsonify(result_order_book))
     return jsonify(result_order_book)
-    # Same as before
-    pass
+
 
 if __name__ == '__main__':
     app.run(port='5002')
