@@ -12,6 +12,10 @@ from datetime import datetime
 import math
 import sys
 import traceback
+import time
+from web3 import Web3
+from algosdk import mnemonic
+from algosdk.v2client import indexer
 
 # TODO: make sure you implement connect_to_algo, send_tokens_algo, and send_tokens_eth
 from send_tokens import connect_to_algo, connect_to_eth, send_tokens_algo, send_tokens_eth
@@ -85,6 +89,33 @@ def connect_to_blockchains():
 """ End of pre-defined methods """
         
 """ Helper Methods (skeleton code for you to implement) """
+def check_sig(payload,sig):
+    #1. Verifying an endpoint for verifying signatures for ethereum
+    result_check_sig = False
+    platform = payload['platform']
+    sk = sig
+    pk = payload['pk']
+    message = json.dumps(payload)
+    
+    if platform == "Ethereum":
+        eth_encoded_msg = eth_account.messages.encode_defunct(text=message)
+        recovered_pk = eth_account.Account.recover_message(eth_encoded_msg,signature=sk)
+        if(recovered_pk == pk):
+            result_check_sig = True
+            #print( "Eth sig verifies!" )    
+    
+        #2. Verifying an endpoint for verifying signatures for Algorand
+    elif platform == "Algorand":
+        result_check_sig = algosdk.util.verify_bytes(message.encode('utf-8'),sk,pk)
+        if(result_check_sig):
+            #print( "Algo sig verifies!" )
+            result_check_sig = True
+    
+        #3. Check for invalid input
+    else:
+        print("invalid input")
+    return jsonify(result_check_sig)
+
 
 def log_message(message_dict):
     msg = json.dumps(message_dict)
@@ -219,7 +250,7 @@ def execute_txes(txes):
         order_dict['tx_id'] = send_tokens_algo(acl, algo_pk , algo_tx)
         txes.append(order_dict)
           
-        g.session.add(algo_tx_id)
+        g.session.add(algo_tx)
         g.session.commit()
         
     for eth_tx in eth_txes:
@@ -253,10 +284,10 @@ def address():
         
         if content['platform'] == "Ethereum":
             #Your code here
-            return jsonify( eth_pk )
+            return jsonify(eth_pk)
         if content['platform'] == "Algorand":
             #Your code here
-            return jsonify( algo_pk )
+            return jsonify(algo_pk)
 
 @app.route('/trade', methods=['POST'])
 def trade():
