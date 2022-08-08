@@ -50,6 +50,9 @@ event ApprovalForAll:
     operator: indexed(address)
     approved: bool
 
+name: public(String[32])
+symbol: public(String[32])
+idToURI: public(HashMap[uint256, String[53]])
 
 # @dev Mapping from NFT ID to the address that owns it.
 idToOwner: HashMap[uint256, address]
@@ -77,7 +80,7 @@ ERC721_INTERFACE_ID: constant(bytes32) = 0x0000000000000000000000000000000000000
 
 
 @external
-def __init__():
+def __init__(_name: String[32], _symbol: String[32]):
     """
     @dev Contract constructor.
     """
@@ -324,7 +327,7 @@ def setApprovalForAll(_operator: address, _approved: bool):
 ### MINT & BURN FUNCTIONS ###
 
 @external
-def mint(_to: address, _tokenId: uint256) -> bool:
+def mint(_to: address, _tokenId: uint256, _URI: String[53]) -> bool:
     """
     @dev Function to mint tokens
          Throws if `msg.sender` is not the minter.
