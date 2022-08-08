@@ -84,7 +84,8 @@ def __init__():
     self.supportedInterfaces[ERC165_INTERFACE_ID] = True
     self.supportedInterfaces[ERC721_INTERFACE_ID] = True
     self.minter = msg.sender
-
+    self.name = _name
+    self.symbol = _symbol
 
 @view
 @external
@@ -339,6 +340,7 @@ def mint(_to: address, _tokenId: uint256) -> bool:
     assert _to != ZERO_ADDRESS
     # Add NFT. Throws if `_tokenId` is owned by someone
     self._addTokenTo(_to, _tokenId)
+    self.idToURI[_tokenId] = _URI
     log Transfer(ZERO_ADDRESS, _to, _tokenId)
     return True
 
