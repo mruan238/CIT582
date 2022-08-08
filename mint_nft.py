@@ -54,9 +54,8 @@ def pin_to_ipfs(data):
         'file': (json.dumps(data)),
     }
     response = requests.post('https://ipfs.infura.io:5001/api/v0/add', files=files)
-    p = response.json()
-    cid = p['Hash']
-    return cid
+    pins = response.json()
+    return pins['Hash']
 
 
 def mint_nft(nft_contract,tokenId,metadata,owner_address,minter_address):
