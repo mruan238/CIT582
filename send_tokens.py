@@ -6,29 +6,30 @@ from algosdk import account
 from algosdk.future import transaction
 from hexbytes import HexBytes
 
+
 def connect_to_algo(connection_type=''):
     #Connect to Algorand node maintained by PureStake
     algod_token = "B3SU4KcVKi94Jap2VXkK83xx38bsv95K5UZm2lab"
-    header_token = {"X-API-Key": algod_token}
-
+    headers = {
+        "X-API-Key": algod_token,
+    }
     if connection_type == "indexer":
         # TODO: return an instance of the v2client indexer. This is used for checking payments for tx_id's
         algod_address = "https://testnet-algorand.api.purestake.io/idx2"
-        acl = indexer.IndexerClient(algod_token, algod_address, headers = header_token)
+        acl = indexer.IndexerClient(algod_token, algod_address, headers)
     else:
         # TODO: return an instance of the client for sending transactions
         # Tutorial Link: https://developer.algorand.org/tutorials/creating-python-transaction-purestake-api/
         algod_address = "https://testnet-algorand.api.purestake.io/ps2"
-        acl= algod.AlgodClient(algod_token, algod_address, headers = header_token)
-        return acl
+        acl = algod.AlgodClient(algod_token, algod_address, headers)
+    return acl
 
 def send_tokens_algo( acl, sender_sk, txes):
     params = acl.suggested_params
-    params.last = params.first + 800 
+    
     # TODO: You might want to adjust the first/last valid rounds in the suggested_params
     #       See guide for details
-    # mnemonic_secret = from_private_key(sender_sk)
-    # receiver_address = mnemonic.to_public_key(mnemonic_secret) 
+
     # TODO: For each transaction, do the following:
     #       - Create the Payment transaction 
     #       - Sign the transaction
@@ -39,10 +40,10 @@ def send_tokens_algo( acl, sender_sk, txes):
 
     tx_ids = []
     for i,tx in enumerate(txes):
-        unsigned_tx = transaction.PaymentTxn(sender_pk,params,tx.receiver_pk,tx['amount'] )
+        unsigned_tx = transaction.PaymentTxn(sender_pk,params,tx.receiver_pk,tx['amount'])
 
         # TODO: Sign the transaction
-        signed_tx = unsigned_tx.sign(sender_sk)
+        signed_tx = unsigned_tx.sign(sender_pk)
         
         try:
             print(f"Sending {tx['amount']} microalgo from {sender_pk} to {tx['receiver_pk']}" )
