@@ -4,7 +4,7 @@ from web3 import Web3
 
 
 # generate account
-mnemonic_secret = "exclude shop before cheap forward gadget loop route skin trash absent feed alien cluster federal regular mix mixed result soon mixed radio cage abstract try"
+mnemonic_secret = "spray produce monitor fun pen census cupboard ten ski year describe wall"
 sender_sk = mnemonic.to_private_key(mnemonic_secret)
 sender_pk = mnemonic.to_public_key(mnemonic_secret)
 print("sender_sk: ", sender_sk)
