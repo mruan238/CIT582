@@ -153,4 +153,4 @@ def send_tokens_eth(w3, sender_sk, txes):
         tx_ids.append(tx_id)
         continue
 
-    return 
+    return tx_ids
