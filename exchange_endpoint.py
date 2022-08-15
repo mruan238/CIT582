@@ -354,7 +354,6 @@ def trade():
             fill_order(order,get_tx)
         # 4. Execute the transactions
             execute_txes(get_tx)
-        # If all goes well, return jsonify(True). else return jsonify(False)
     return jsonify(True)
 
 
