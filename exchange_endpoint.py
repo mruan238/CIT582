@@ -111,11 +111,9 @@ def log_message(message_dict):
 def get_algo_keys():
     # TODO: Generate or read (using the mnemonic secret)
     # the algorand public/private keys
-    mnemonic_secret = "spray produce monitor fun pen census cupboard ten ski year describe wall"
+    mnemonic_secret = "purse reason lab neglect trial prosper play season jacket sea earth decide title acid poet safe comic hood travel trend midnight giggle anchor abandon regret"
     algo_sk = mnemonic.to_private_key(mnemonic_secret)
     algo_pk = mnemonic.to_public_key(mnemonic_secret)
-    # print("algo", algo_pk, algo_sk)
-
     return algo_sk, algo_pk
 
 
@@ -129,8 +127,6 @@ def get_eth_keys(filename="eth_mnemonic.txt"):
     acct = w3.eth.account.from_mnemonic(mnemonic_secret)
     eth_pk = acct._address
     eth_sk = acct._private_key
-    # print("eth", eth_pk, eth_sk)
-
     return eth_sk, eth_pk
 
 
@@ -167,7 +163,6 @@ def fill_order(order, txes=[]):
                'order': result, 'tx_amount': order["sell_amount"]}
     txes.append(tx_dict)
 
-    # print(result.id, result.counterparty_id, order_obj.id, order_obj.counterparty_id)
 
     if order_obj.buy_amount > result.sell_amount:
         new_buy_amount = order_obj.buy_amount - result.sell_amount
@@ -176,7 +171,6 @@ def fill_order(order, txes=[]):
         new_order = {'buy_currency': order_obj.buy_currency, 'sell_currency': order_obj.sell_currency,
                      'buy_amount': new_buy_amount, 'sell_amount': new_sell_amount, 'sender_pk': order_obj.sender_pk,
                      'receiver_pk': order_obj.receiver_pk, 'creator_id': order_obj.id}
-        # print(new_buy_amount, new_sell_amount)
         txes.append(fill_order(new_order))
 
     if order_obj.buy_amount < result.sell_amount:
@@ -186,7 +180,6 @@ def fill_order(order, txes=[]):
         new_order = {'buy_currency': result.buy_currency, 'sell_currency': result.sell_currency,
                      'buy_amount': new_buy_amount, 'sell_amount': new_sell_amount, 'sender_pk': result.sender_pk,
                      'receiver_pk': result.receiver_pk, 'creator_id': result.id}
-        # print(new_buy_amount, new_sell_amount)
         txes.append(fill_order(new_order))
 
     return txes
@@ -220,7 +213,7 @@ def execute_txes(txes):
 
     i = 0
     for tx in algo_txes:
-        tx_obj = TX(order_id=tx.order_id, tx_id=algo_tx_ids[i])
+        tx_obj = TX(order_id = tx.order_id, tx_id = algo_tx_ids[i])
         print(tx_obj)
         g.session.add(tx_obj)
         g.session.commit()
@@ -228,7 +221,7 @@ def execute_txes(txes):
 
     j = 0
     for tx in eth_txes:
-        tx_obj = TX(order_id=tx.order_id, tx_id=eth_tx_ids[j])
+        tx_obj = TX(order_id = tx.order_id, tx_id = eth_tx_ids[j])
         print(tx_obj)
         g.session.add(tx_obj)
         g.session.commit()
@@ -243,31 +236,19 @@ def execute_txes(txes):
 def address():
     if request.method == "POST":
         content = request.get_json(silent=True)
-        # print(content)
-        # if 'platform' not in content.keys():
-        #     print(f"Error: no platform provided")
-        #     return jsonify("Error: no platform provided")
-        # if not content['platform'] in ["Ethereum", "Algorand"]:
-        #     print(f"Error: {content['platform']} is an invalid platform")
-        #     return jsonify(f"Error: invalid platform provided: {content['platform']}")
-
         payload = content.get('payload')
         platform = content.get('platform')
         if platform == None:
             platform = payload.get('platform')
 
-        # if content['platform'] == "Ethereum":
-        # print("address platform is", platform)
         if platform == "Ethereum":
             # Your code here
             eth_sk, eth_pk = get_eth_keys()
             # print(eth_pk, jsonify(eth_pk))
             return jsonify(eth_pk)
-        # if content['platform'] == "Algorand":
         if platform == "Algorand":
             # Your code here
             algo_sk, algo_pk = get_algo_keys()
-            # print(algo_pk, jsonify(algo_pk))
             return jsonify(algo_pk)
 
 
@@ -277,7 +258,6 @@ def trade():
     connect_to_blockchains()
     w3 = Web3()
     server_pk = address()
-    # print(server_pk)
     if request.method == "POST":
         content = request.get_json(silent=True)
         columns = ["buy_currency", "sell_currency", "buy_amount", "sell_amount", "platform", "tx_id", "receiver_pk"]
@@ -345,7 +325,6 @@ def trade():
             gas = tx.get('result').get('value')
             sender = tx.get('result').get('from')
             receiver = tx.get('result').get('to')
-            # print(receiver, server_pk.get_json(), receiver == server_pk.get_json())
             if gas == sell_amount and sender == pk and receiver == server_pk:
                 validity = True
 
@@ -354,12 +333,10 @@ def trade():
             amount = tx.get('transactions')[0].get('payment-transaction').get('amount')
             sender = tx.get('transactions')[0].get('sender')
             receiver = tx.get('transactions')[0].get('payment-transaction').get('receiver')
-            # print(receiver, server_pk.get_json(), receiver == server_pk.get_json())
             if amount == sell_amount and sender == pk and receiver == server_pk:
                 validity = True
 
         # TODO: Add the order to the database
-        # print(sig_result, validity)
 
         if sig_result and validity:
             # TODO: Fill the order
@@ -375,14 +352,11 @@ def trade():
         else:
             log_message(payload)
             return jsonify(False)
-
         return jsonify(True)
 
 
 @app.route('/order_book')
 def order_book():
-    # fields = ["buy_currency", "sell_currency", "buy_amount", "sell_amount", "signature", "tx_id", "receiver_pk",
-    #           "sender_pk"]
     temp_list = []
     for row in g.session.query(Order).all():
         temp = {'sender_pk': row.sender_pk, 'receiver_pk': row.receiver_pk, 'buy_currency': row.buy_currency,
