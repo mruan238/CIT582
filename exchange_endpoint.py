@@ -343,40 +343,70 @@ def trade():
         # Your code here
         
         # 1. Check the signature
-        result_check = False
-        payload = content['payload']
-        sig = content['sig']
-        result_check = check_sig(payload,sig)
+        sig = content.get('sig')
+        payload = content.get('payload')
         
         # 2. Add the order to the table
-        if(result_check):
-            order = {}
-            order['sender_pk'] = payload['sender_pk']
-            order['receiver_pk'] = payload['receiver_pk']
-            order['buy_currency'] = payload['buy_currency']
-            order['sell_currency'] = payload['sell_currency']
-            order['buy_amount'] = payload['buy_amount']
-            order['sell_amount'] = payload['sell_amount']
-            order['signature'] = sig
-            order['tx_id'] = payload['tx_id']
-        
+        if check_sig(payload, sig):
+            print('signature matched')
+            # TODO: Add the order to the database
+            # TODO: Fill the order
+           
+            order_dict = {'sender_pk': payload.get('sender_pk'),
+                          'receiver_pk': payload.get('receiver_pk'),
+                          'buy_currency':payload.get('buy_currency'),
+                          'sell_currency':payload.get('sell_currency'),
+                          'buy_amount':payload.get('buy_amount'),
+                          'sell_amount':payload.get('sell_amount'),
+                          'tx_id':payload.get('tx_id')}
         # 3a. Check if the order is backed by a transaction equal to the sell_amount (this is new)
-
-
+            print('transaction_id: ' + order_dict['tx_id'] )
+            if order_dict['sell_currency'] == 'Algorand':
+                tx = g.icl.search_transactions(txid = order_dict['tx_id'])
+                assert tx.amount == order_dict['sell_amount']
+                tx_amount = tx.amount
+                print('printing algorand tx')
+                print(tx)
+            elif order_dict['sell_currency'] == 'Ethereum':
+                tx = g.w3.eth.get_transaction(order_dict['tx_id'])
+                assert tx.value == order_dict['sell_amount']
+                tx_amount = tx.value
+                print('printing ethereum tx')
+                print(tx)
+            #if(order_dict['sell_amount'] == tx.order.sell_amount and order_dict['sender_pk'] == tx.order.sender_pk and tx.platform == tx.order.sell_currency ):
+            if (tx_amount == order_dict['sell_amount']):
+                print('trying to fill order')
+                
+                try:
+                    fill_order(order_dict)
+                    return jsonify( True)
+                except Exception as e:
+                  import traceback
+                  print(traceback.format_exc())
+                  print(e)  
+ 
+                  
+                #print('trying to execute order now')
+                #
+                #try:
+                #    execute_txes(tx)
+                #except Exception as e:
+                #  import traceback
+                #  print(traceback.format_exc())
+                #  print(e)  
+                  
+            else:
+                return jsonify( False )
+        
         # 3b. Fill the order (as in Exchange Server II) if the order is valid
-            txes = fill_order(order,txes=[])
         
         # 4. Execute the transactions
-            execute_txes(txes)
-        # If all goes well, return jsonify(True). else return jsonify(False)
-            return jsonify(True)
-        else:
-            log_message(content)
         
-        if(result_check):
-            return jsonify(True)
+        # If all goes well, return jsonify(True). else return jsonify(False)
         else:
-            return jsonify(False)
+            log_message(payload)
+            return jsonify( False )
+
 
 
 @app.route('/order_book')
