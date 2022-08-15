@@ -110,7 +110,10 @@ def log_message(message_dict):
 def get_algo_keys():
     # TODO: Generate or read (using the mnemonic secret)
     # the algorand public/private keys
-    mnemonic_secret = "spray produce monitor fun pen census cupboard ten ski year describe wall"
+    w3 = Web3()
+    w3.eth.account.enable_unaudited_hdwallet_features()
+    acct,mnemonic_secret = w3.eth.account.create_with_mnemonic()
+    acct = w3.eth.account.from_mnemonic(mnemonic_secret)
     algo_sk = mnemonic.to_private_key(mnemonic_secret)
     algo_pk = mnemonic.to_public_key(mnemonic_secret)
 
