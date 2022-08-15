@@ -309,7 +309,7 @@ def trade():
                 error = True
         if error:
             print(json.dumps(content))
-            return jsonify(False)
+            return jsonify( False )
 
         error = False
         for column in columns:
@@ -318,7 +318,7 @@ def trade():
                 error = True
         if error:
             print(json.dumps(content))
-            return jsonify(False)
+            return jsonify( False )
 
         # Your code here
         # 1. Check the signature
@@ -330,14 +330,14 @@ def trade():
         if check_flag:
             order = insert_order(payload, sig)
         else:
-            return jsonify(False)
+            return jsonify( False )
         # 3a. Check if the order is backed by a transaction equal to the sell_amount (this is new)
         check_tx=False
         get_tx=None
         if payload["platform"] == '':
             get_tx = g.w3.eth.get_transaction(order.tx_id)
             if get_tx == None:
-                return jsonify(False)
+                return jsonify( False )
             else:
                 if get_tx['to'] == order.receiver_pk and get_tx['value'] == order.sell_amount:
                     check_tx=True
@@ -354,7 +354,7 @@ def trade():
             fill_order(order,get_tx)
         # 4. Execute the transactions
             execute_txes(get_tx)
-    return jsonify(True)
+    return jsonify( True )
 
 
 @app.route('/order_book')
