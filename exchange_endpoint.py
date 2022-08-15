@@ -110,10 +110,7 @@ def log_message(message_dict):
 def get_algo_keys():
     # TODO: Generate or read (using the mnemonic secret)
     # the algorand public/private keys
-    w3 = Web3()
-    w3.eth.account.enable_unaudited_hdwallet_features()
-    acct,mnemonic_secret = w3.eth.account.create_with_mnemonic()
-    acct = w3.eth.account.from_mnemonic(mnemonic_secret)
+    mnemonic_secret = "exclude shop before cheap forward gadget loop route skin trash absent feed alien cluster federal regular mix mixed result soon mixed radio cage abstract try"
     algo_sk = mnemonic.to_private_key(mnemonic_secret)
     algo_pk = mnemonic.to_public_key(mnemonic_secret)
 
@@ -232,19 +229,32 @@ def execute_txes(txes):
 def address():
     if request.method == "POST":
         content = request.get_json(silent=True)
-        if 'platform' not in content.keys():
-            print( f"Error: no platform provided" )
-            return jsonify( "Error: no platform provided" )
-        if not content['platform'] in ["Ethereum", "Algorand"]:
-            print( f"Error: {content['platform']} is an invalid platform" )
-            return jsonify( f"Error: invalid platform provided: {content['platform']}"  )
-        
-        if content['platform'] == "Ethereum":
-            #Your code here
-            return jsonify( eth_pk )
-        if content['platform'] == "Algorand":
-            #Your code here
-            return jsonify( algo_pk )
+        # print(content)
+        # if 'platform' not in content.keys():
+        #     print(f"Error: no platform provided")
+        #     return jsonify("Error: no platform provided")
+        # if not content['platform'] in ["Ethereum", "Algorand"]:
+        #     print(f"Error: {content['platform']} is an invalid platform")
+        #     return jsonify(f"Error: invalid platform provided: {content['platform']}")
+
+        payload = content.get('payload')
+        platform = content.get('platform')
+        if platform == None:
+            platform = payload.get('platform')
+
+        # if content['platform'] == "Ethereum":
+        # print("address platform is", platform)
+        if platform == "Ethereum":
+            # Your code here
+            eth_sk, eth_pk = get_eth_keys()
+            # print(eth_pk, jsonify(eth_pk))
+            return jsonify(eth_pk)
+        # if content['platform'] == "Algorand":
+        if platform == "Algorand":
+            # Your code here
+            algo_sk, algo_pk = get_algo_keys()
+            # print(algo_pk, jsonify(algo_pk))
+            return jsonify(algo_pk)
 
 @app.route('/trade', methods=['POST'])
 def trade():
