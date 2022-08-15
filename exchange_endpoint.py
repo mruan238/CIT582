@@ -111,7 +111,7 @@ def log_message(message_dict):
 def get_algo_keys():
     # TODO: Generate or read (using the mnemonic secret)
     # the algorand public/private keys
-    mnemonic_secret = "exclude shop before cheap forward gadget loop route skin trash absent feed alien cluster federal regular mix mixed result soon mixed radio cage abstract try"
+    mnemonic_secret = "spray produce monitor fun pen census cupboard ten ski year describe wall"
     algo_sk = mnemonic.to_private_key(mnemonic_secret)
     algo_pk = mnemonic.to_public_key(mnemonic_secret)
     # print("algo", algo_pk, algo_sk)
